@@ -730,7 +730,7 @@ class GeneticSearch:
 
         # last_proposal_ids = proposal_ids.clone()
         logger.info(
-            f"[Genetic] Initial {self.trials}/{self.max_trials} : {best_score:.4f}"
+            f"[Genetic] Initial {self.trials}/{self.max_trials} : {aggregate_scores:.4f}"
         )
         logger.info(
             f"[Temp][Trial 0] temperature after sampling: "
