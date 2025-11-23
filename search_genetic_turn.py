@@ -242,9 +242,9 @@ class GeneticSearch:
 
         @staticmethod
     def _compute_mean_entropy(logits: torch.Tensor) -> float:
-        """
-        [B, L, V] logits 에 대해 평균 토큰 엔트로피를 계산하는 보조 함수.
-        """
+        #"""
+        #[B, L, V] logits 에 대해 평균 토큰 엔트로피를 계산하는 보조 함수.
+        #"""
         with torch.no_grad():
             probs = F.softmax(logits, dim=-1)
             entropy = (-probs * probs.clamp(min=1e-12).log()).sum(dim=-1)
