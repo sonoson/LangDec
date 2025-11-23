@@ -20,7 +20,7 @@ from general_prm import GeneralPRM
 from deepseek_prm import DeepseekPRM
 from llama_generator import LlamaGenerator
 from search_sc import SelfConsistencySearch
-from search_genetic import GeneticSearch
+from search_genetic_dynamic import GeneticSearch
 
 # Create a logger object
 logger = logging.getLogger(__name__)
