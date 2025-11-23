@@ -169,9 +169,9 @@ class GeneticSearch:
         self.prm = prm
 
         self.temp_update_rule = temp_update_rule
-        self.temp_change_rate = float(temp_change_rate)
-        self.temp_floor = float(temp_floor)
-        self.temp_ceil = float(temp_ceil)
+        self.temp_change_rate = temp_change_rate
+        self.temp_floor = temp_floor
+        self.temp_ceil = temp_ceil
         self.turn_sample_size = turn_sample_size
         
         self.max_trials = max_trials
