@@ -722,11 +722,11 @@ class GeneticSearch:
         #    complete_beams['step_scores'] = []
         #    complete_beams['temp'] = [self.generator.temperature]
         #else:
-        complete_beams["CaseType"].append("Candidates")
-        complete_beams["answer"] = []
-        complete_beams["aggregate_scores"] = []
-        complete_beams["step_scores"] = []
-        complete_beams["temp"] = [self.generator.temperature]
+        complete_beams['CaseType'].append('Candidates')
+        complete_beams['answer'].append(proposal_response_text[0])
+        complete_beams['aggregate_scores'].append(proposal_agg_scores)
+        complete_beams['step_scores'].append(proposal_scores.tolist())
+        complete_beams['temp'].append(self.generator.temperature)
 
         # last_proposal_ids = proposal_ids.clone()
         logger.info(
