@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from collections import defaultdict
 from typing import Any, Dict, List, Literal, Optional, Tuple
+from datetime import datetime
 
 import torch
 import torch.nn.functional as F
@@ -144,7 +145,22 @@ class GeneticSearch:
 
         temp_update_rule=None,
         max_trials: int = None,
-        score_aggregation: Literal["min", "mean", "last", 'prod'] = "min",
+        score_aggregation: Literal["min", "mean", "last", "prod"] = "min",
+        # TURN temperature grid step (주로 로깅용; 실제 grid는 turn_sample_size로 linspace)
+        temp_change_rate: float = 0.1,
+        # TURN 탐색 구간 [temp_floor, temp_ceil]
+        temp_floor: float = 0.1,
+        temp_ceil: float = 1.4,
+        # TURN 에 사용할 probe 샘플 총 개수 (질문당 probe N회)
+        turn_sample_size: int = 20,
+        # (선택적) 온도 업데이트를 점진적으로 제한하고 싶을 때 사용하는 최대 이동량
+        max_temp_change: float = 0.1,
+        # ====== TURN probe 관련 옵션 ======
+        # probe 샘플에서 사용할 최대 토큰 수 (full CoT보다 훨씬 작게)
+        turn_probe_tokens: int = 32,
+        # probe 를 몇 번 돌릴지 (실제 사용 샘플 수; turn_sample_size 보다 작게 써도 됨)
+        turn_probe_trials: int = None,
+        
         metric:str = 'top1',
         select_strategy:str = 'random'
     ):
@@ -153,14 +169,63 @@ class GeneticSearch:
         self.prm = prm
 
         self.temp_update_rule = temp_update_rule
+        self.temp_change_rate = temp_change_rate
+        self.temp_floor = temp_floor
+        self.temp_ceil = temp_ceil
+        self.turn_sample_size = turn_sample_size
+        
         self.max_trials = max_trials
         self.trials = 0
 
-        self.score_aggregation = score_aggregation
+   
+        # generator 에 초기 temperature 가 있으면 그 값을 기본으로 사용
+        if getattr(self.generator, "temperature", None) is not None:
+            self.base_temperature = float(self.generator.temperature)
+        else:
+            self.base_temperature = 1.0
+            self.generator.temperature = self.base_temperature
 
+        # per-update 최대 이동량 설정 (gradual 모드에서 사용 가능)
+        self.max_temp_change = max_temp_change
+        self.score_aggregation = score_aggregation
+        
         self.return_all_steps = True
 
         self.init_number_of_beams = 1
+        
+        # TURN 알고리즘용 logits 버퍼 (probe 에서 쌓은 샘플 – 디버깅용)
+        self._turn_logits_buffer: List[torch.Tensor] = []
+
+        # 질문 단위 TURN 상태
+        self.turn_jump_once = True
+        self.turn_refine = False
+        self.turn_refine_span = 0.2   # 예: T* ± 0.2
+        self.turn_refine_step = 0.02  # 국소 탐색 시 ΔT
+        self._turn_refine_done = False
+        self._last_predicted_temp = None
+
+        # probe 설정
+        self.turn_probe_tokens = int(turn_probe_tokens)
+        # probe trial 횟수가 명시되지 않으면 turn_sample_size 와 동일하게 사용
+        self.turn_probe_trials = int(turn_probe_trials) if turn_probe_trials is not None else int(turn_sample_size)
+
+        # TURN에서 사용할 온도 격자:
+        # temp_floor ~ temp_ceil 구간을 turn_sample_size 개로 균등 분할
+        self.turn_temps = np.linspace(self.temp_floor, self.temp_ceil, self.turn_sample_size, dtype=float)
+        num_temp_grid = len(self.turn_temps)
+
+        logger.info(
+            f"[Init] SelfConsistencySearch("
+            f"method={self.method}, "
+            f"base_temperature={self.base_temperature:.3f}, "
+            f"temp_floor={self.temp_floor}, temp_ceil={self.temp_ceil}, "
+            f"temp_change_rate={self.temp_change_rate}, "
+            f"num_temp_grid={num_temp_grid}, "
+            f"turn_sample_size={self.turn_sample_size}, "
+            f"turn_probe_tokens={self.turn_probe_tokens}, "
+            f"turn_probe_trials={self.turn_probe_trials}, "
+            f"max_temp_change={self.max_temp_change})"
+        )
 
         self.trial_to_ids = {}
         self.trial_to_logits = {}
