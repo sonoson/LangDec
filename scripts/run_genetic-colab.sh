@@ -34,7 +34,7 @@ dataset='amphora/MCLM'
 start=0
 end=1
 
-CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python LangDec/main.py \
+CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python LangDec/main-turn.py \
     --seed $seed\
     --method "Genetic_${METHOD_NAME}"\
     --metric "top1"\
