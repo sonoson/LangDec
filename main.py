@@ -263,6 +263,8 @@ if __name__ == '__main__':
             max_trials=args.max_trials,
             temp_update_rule=args.temp_update_rule,
             score_aggregation=args.score_aggregation,
+            temp_change_rate=args.temp_change_rate,
+
             metric=args.metric,
             select_strategy=args.select_strategy,
         )        
