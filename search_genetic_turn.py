@@ -240,7 +240,7 @@ class GeneticSearch:
 #    def _update_temperature(self): ## 삭제처리
 
 
-        @staticmethod
+    @staticmethod
     def _compute_mean_entropy(logits: torch.Tensor) -> float:
         #"""
         #[B, L, V] logits 에 대해 평균 토큰 엔트로피를 계산하는 보조 함수.
