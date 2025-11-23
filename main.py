@@ -20,7 +20,7 @@ from general_prm import GeneralPRM
 from deepseek_prm import DeepseekPRM
 from llama_generator import LlamaGenerator
 from search_sc import SelfConsistencySearch
-from search_genetic import GeneticSearch
+from search_genetic_turn import GeneticSearch
 
 # Create a logger object
 logger = logging.getLogger(__name__)
@@ -47,11 +47,15 @@ parser.add_argument("--max_trials", type=int, default=None)
 parser.add_argument("--pool_size", type=int, default=None)
 
 parser.add_argument("--temp_change_rate", type=float, default=0.1)
-parser.add_argument("--temp_floor", type=float, default=0.8)
-parser.add_argument("--temp_ceil", type=float, default=1.2)
+#parser.add_argument("--temp_floor", type=float, default=0.8)
+#parser.add_argument("--temp_ceil", type=float, default=1.2)
+parser.add_argument("--temp_floor", type=float, default=0.1)
+parser.add_argument("--temp_ceil", type=float, default=1.4)
+parser.add_argument("--turn_sample_size", type=int, default=20)
 
 parser.add_argument("--score_aggregation", type=str, default=None)
-parser.add_argument("--temp_update_rule", type=str, default=None)
+#parser.add_argument("--temp_update_rule", type=str, default=None)
+parser.add_argument("--temp_update_rule", type=str, default="turn")
 
 parser.add_argument("--metric", type=str, default='top1')
 parser.add_argument("--select_strategy", type=str, default='random')
@@ -265,6 +269,10 @@ if __name__ == '__main__':
             score_aggregation=args.score_aggregation,
             metric=args.metric,
             select_strategy=args.select_strategy,
+            temp_change_rate=args.temp_change_rate,
+            temp_floor=args.temp_floor,
+            temp_ceil=args.temp_ceil,
+            turn_sample_size=args.turn_sample_size,
         )        
         
     else:
